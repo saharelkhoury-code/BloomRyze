@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BloomAligner · Système de Production</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2F1EE;--sur:#fff;--s2:#F7F6F3;--bdr:#E3E1DC;--bdr2:#C9C7C2;--tx:#1A1916;--t2:#6B6861;--t3:#A8A5A0;--acc:#1B3D6E;--al:#EAF0F9;--blue:#2563EB;--bl:#DBEAFE;--green:#16A34A;--gl:#DCFCE7;--amber:#D97706;--aml:#FEF3C7;--red:#DC2626;--rl:#FEE2E2;--gray:#6B7280;--grl:#F3F4F6;--r:10px;--rsm:6px;--sh:0 1px 4px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh}
+input,select,textarea,button{font-family:'DM Sans',sans-serif}
+a{text-decoration:none}
+/* ─── FULL SCREENS ─── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+/* SETUP / LOGIN */
+#sc-setup,#sc-login{align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2444 0%,#1B3D6E 60%,#2a5298 100%)}
+.auth-box{background:var(--sur);border-radius:16px;padding:36px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.auth-icon{width:40px;height:40px;border-radius:10px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+.auth-brand{font-size:18px;font-weight:700;color:var(--tx)}
+.auth-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.auth-title{font-size:20px;font-weight:700;margin-bottom:6px}
+.auth-desc{font-size:12px;color:var(--t2);margin-bottom:24px;line-height:1.6}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;letter-spacing:.03em}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--bdr2);border-radius:var(--rsm);font-size:13px;background:var(--sur);color:var(--tx);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.field input::placeholder{color:var(--t3)}
+.auth-err{background:var(--rl);border:1px solid #FECACA;color:var(--red);font-size:12px;padding:9px 12px;border-radius:var(--rsm);margin-bottom:12px;display:none}
+.auth-err.show{display:block}
+.auth-link{font-size:12px;color:var(--blue);cursor:pointer;text-align:center;margin-top:14px}
+.auth-link:hover{text-decoration:underline}
+/* ─── APP SCREEN ─── */
+#sc-app{flex-direction:row;height:100vh;overflow:hidden}
+.sidebar{width:228px;flex-shrink:0;background:var(--acc);display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.sb-logo{display:flex;align-items:center;gap:9px}
+.sb-icon{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-name{font-size:12px;font-weight:700;color:#fff;line-height:1.2}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-nav{padding:8px 0;flex:1}
+.sb-sec{font-size:9px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.28);padding:10px 16px 4px;text-transform:uppercase}
+.sb-link{display:flex;align-items:center;gap:8px;padding:8px 16px;color:rgba(255,255,255,.58);font-size:12px;cursor:pointer;border-left:2px solid transparent;transition:all .15s;user-select:none}
+.sb-link:hover{color:#fff;background:rgba(255,255,255,.06)}
+.sb-link.active{color:#fff;background:rgba(255,255,255,.11);border-left-color:rgba(255,255,255,.65);font-weight:500}
+.sb-link svg{opacity:.7;flex-shrink:0}
+.sb-link.active svg{opacity:1}
+.sb-notif{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:auto}
+.sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.sb-user{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:11px;font-weight:600;color:#fff;line-height:1.2}
+.sb-urole{font-size:9px;color:rgba(255,255,255,.4)}
+.sb-stat{display:flex;justify-content:space-between;margin-bottom:4px}
+.sb-sl{font-size:9px;color:rgba(255,255,255,.3)}
+.sb-sv{font-size:10px;font-weight:600;color:rgba(255,255,255,.75);font-family:'DM Mono',monospace}
+/* ─── TOPBAR ─── */
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-title{font-size:14px;font-weight:700}
+.tb-sub{font-size:11px;color:var(--t3);margin-top:1px}
+.tb-right{display:flex;gap:7px;align-items:center}
+/* ─── CONTENT ─── */
+.content{flex:1;overflow-y:auto;padding:22px 24px}
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--rsm);border:1px solid var(--bdr2);background:var(--sur);color:var(--tx);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;line-height:1;white-space:nowrap}
+.btn:hover{background:var(--s2)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn-primary:hover{background:#152f55}
+.btn-green{background:var(--green);border-color:var(--green);color:#fff}
+.btn-green:hover{background:#128a3c}
+.btn-red{background:var(--red);border-color:var(--red);color:#fff}
+.btn-red:hover{background:#b91c1c}
+.btn-amber{background:var(--amber);border-color:var(--amber);color:#fff}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-lg{padding:12px 22px;font-size:14px;font-weight:600}
+.btn-full{width:100%;justify-content:center}
+/* ─── TIMER WIDGET ─── */
+.timer-card{background:var(--acc);border-radius:16px;padding:24px;color:#fff;margin-bottom:16px}
+.timer-case{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.timer-step{font-size:14px;font-weight:600;margin-bottom:18px;color:rgba(255,255,255,.9)}
+.timer-display{font-size:52px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.02em;line-height:1;margin-bottom:6px}
+.timer-fru{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:20px}
+.timer-actions{display:flex;gap:8px}
+.timer-btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.timer-start{background:rgba(255,255,255,.2);color:#fff}
+.timer-start:hover{background:rgba(255,255,255,.3)}
+.timer-stop{background:#fff;color:var(--acc)}
+.timer-stop:hover{background:#f0f4f8}
+.timer-running .timer-display{color:#86efac}
+/* ─── KPI GRID ─── */
+.kpi-grid{display:grid;gap:10px;margin-bottom:16px}
+.kg4{grid-template-columns:repeat(4,1fr)}
+.kg3{grid-template-columns:repeat(3,1fr)}
+.kg2{grid-template-columns:repeat(2,1fr)}
+.kpi{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi-l{font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.04em;margin-bottom:5px;text-transform:uppercase}
+.kpi-v{font-size:24px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
+.kpi-s{font-size:10px;color:var(--t3);margin-top:4px}
+/* ─── CARDS ─── */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;box-shadow:var(--sh);margin-bottom:14px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--t3);text-transform:uppercase}
+.card-2col{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-bottom:14px}
+.card-2eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-green{background:var(--gl);color:var(--green)}.b-amber{background:var(--aml);color:var(--amber)}
+.b-red{background:var(--rl);color:var(--red)}.b-gray{background:var(--grl);color:var(--gray)}
+.b-blue{background:var(--bl);color:var(--blue)}.b-acc{background:var(--al);color:var(--acc)}
+.b-fp{background:var(--bl);color:var(--blue)}.b-ip{background:var(--gl);color:var(--green)}
+.b-w1{background:var(--aml);color:var(--amber)}.b-w2{background:var(--rl);color:var(--red)}
+/* ─── TABLES ─── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--t3);border-bottom:2px solid var(--bdr);background:var(--s2);white-space:nowrap}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--s2)}
+tfoot td{padding:8px 10px;font-weight:700;background:var(--s2);border-top:2px solid var(--bdr)}
+.tr{text-align:right;font-family:'DM Mono',monospace}
+/* ─── PROGRESS ─── */
+.prog{height:5px;background:var(--s2);border-radius:3px;overflow:hidden}
+.prog-f{height:100%;border-radius:3px;transition:width .3s}
+/* ─── MODALS ─── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--sur);border-radius:14px;width:100%;max-width:680px;box-shadow:0 20px 60px rgba(0,0,0,.2);flex-shrink:0}
+.modal-sm{max-width:440px}
+.modal-lg{max-width:860px}
+.mhdr{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.mhdr h2{font-size:14px;font-weight:700}
+.mbody{padding:20px}
+.mfooter{padding:12px 20px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;gap:7px;background:var(--s2);border-radius:0 0 14px 14px}
+/* ─── FORMS ─── */
+.fr{display:grid;gap:10px;margin-bottom:10px}
+.fr2{grid-template-columns:1fr 1fr}
+.fr3{grid-template-columns:1fr 1fr 1fr}
+.fr4{grid-template-columns:1fr 1fr 1fr 1fr}
+/* ─── COLORS ─── */
+.c-blue{color:var(--blue)}.c-green{color:var(--green)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.c-gray{color:var(--gray)}
+/* ─── APPROVAL CARD ─── */
+.appr-card{border:1px solid var(--bdr);border-radius:var(--r);background:var(--sur);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh)}
+.appr-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s2);border-bottom:1px solid var(--bdr);cursor:pointer}
+.appr-hdr:hover{background:var(--bdr)}
+.appr-case{font-size:11px;font-family:'DM Mono',monospace;font-weight:700;color:var(--acc)}
+.appr-step{font-size:13px;font-weight:600;flex:1}
+.appr-body{padding:14px}
+.field-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.field-row:last-child{border-bottom:none}
+.field-key{color:var(--t2);font-weight:500}
+.field-val{font-family:'DM Mono',monospace;color:var(--tx)}
+/* ─── STEP CARDS ─── */
+.step-card{border:1px solid var(--bdr);border-radius:var(--r);background:var(--sur);margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.step-card.available{border-left:3px solid var(--green);cursor:pointer}
+.step-card.available:hover{border-color:var(--green)}
+.step-card.in-progress{border-left:3px solid var(--blue)}
+.step-card.pending{border-left:3px solid var(--amber)}
+.step-card.approved{border-left:3px solid var(--green);opacity:.7}
+.step-card.rejected{border-left:3px solid var(--red)}
+.step-card.locked{opacity:.4}
+.step-hdr{display:flex;align-items:center;gap:10px;padding:11px 13px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--t2);flex-shrink:0}
+.step-name{font-size:12px;font-weight:600;flex:1}
+.step-meta{font-size:10px;color:var(--t3)}
+/* ─── STOCK ─── */
+.stock-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:13px;box-shadow:var(--sh)}
+.stock-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.stock-bar{height:6px;background:var(--s2);border-radius:3px;overflow:hidden;margin-top:4px}
+.stock-fill{height:100%;border-radius:3px;transition:width .4s}
+/* ─── ATTENDANCE ─── */
+.att-pill{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px}
+/* ─── QC ─── */
+.qc-grp-title{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--acc);padding:6px 0 3px;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
+.qc-check{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px}
+.qc-check:last-child{border-bottom:none}
+.qc-check label{flex:1;cursor:pointer}
+.qc-check input[type=checkbox]{width:14px;height:14px;accent-color:var(--green);cursor:pointer}
+/* ─── NC ─── */
+.nc-minor{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.nc-major{background:#FEE2E2;color:#991B1B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.nc-critical{background:#1c0606;color:#FCA5A5;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+/* ─── UTILS ─── */
+.pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--bdr2);background:var(--sur);color:var(--t2);cursor:pointer;transition:all .15s}
+.pill:hover{border-color:var(--acc);color:var(--acc)}
+.pill.active{background:var(--acc);border-color:var(--acc);color:#fff}
+.filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-hdr h2{font-size:15px;font-weight:700}
+.empty{text-align:center;padding:44px 24px;color:var(--t3)}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.4}
+.empty h3{font-size:14px;font-weight:700;color:var(--t2);margin-bottom:5px}
+.empty p{font-size:12px;line-height:1.6;max-width:260px;margin:0 auto 16px}
+.divider{height:1px;background:var(--bdr);margin:12px 0}
+.mono{font-family:'DM Mono',monospace}
+.alert-box{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rsm);margin-bottom:8px;font-size:12px}
+.alert-danger{background:var(--rl);border:1px solid #FECACA;color:var(--red)}
+.alert-warn{background:var(--aml);border:1px solid #FDE68A;color:var(--amber)}
+.alert-info{background:var(--bl);border:1px solid #BFDBFE;color:var(--blue)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--acc);color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.2);display:none;animation:su .2s ease}
+@keyframes su{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--t3);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SETUP SCREEN ═══════ -->
+<div id="sc-setup" class="screen active">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-icon">BA</div>
+      <div><div class="auth-brand">BloomAligner</div><div class="auth-sub">Système de production · MDR 2017/745</div></div>
+    </div>
+    <div class="auth-title">Configuration initiale</div>
+    <div class="auth-desc">Connectez votre base de données Supabase. Vous trouverez ces informations dans <strong>Supabase → Settings → API</strong>.</div>
+    <div class="auth-err" id="setup-err"></div>
+    <div class="field"><label>URL du projet Supabase</label><input id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" autocomplete="off"></div>
+    <div class="field"><label>Clé publique (anon key)</label><input id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="saveConfig()" style="margin-top:6px">Connecter →</button>
+    <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:8px;font-size:11px;color:var(--t2);line-height:1.7">
+      <strong>Avant de continuer :</strong> Exécutez le fichier <code style="background:var(--bdr);padding:1px 5px;border-radius:3px">schema.sql</code> dans Supabase → SQL Editor pour créer toutes les tables.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ LOGIN SCREEN ═══════ -->
+<div id="sc-login" class="screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-icon">BA</div>
+      <div><div class="auth-brand">BloomAligner</div><div class="auth-sub">Système de production</div></div>
+    </div>
+    <div class="auth-title">Connexion</div>
+    <div class="auth-err" id="login-err"></div>
+    <div class="field"><label>Adresse email</label><input id="login-email" type="email" placeholder="nom@bloomaligner.fr" autocomplete="email"></div>
+    <div class="field"><label>Mot de passe</label><input id="login-pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-full btn-lg" onclick="doLogin()" style="margin-top:6px" id="login-btn">Se connecter →</button>
+    <div class="auth-link" onclick="showSetup()">⚙ Reconfigurer la connexion Supabase</div>
+  </div>
+</div>
+
+<!-- ═══════ APP SCREEN ═══════ -->
+<div id="sc-app" class="screen">
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <div class="sb-icon">BA</div>
+        <div><div class="sb-name">BloomAligner</div><div class="sb-sub">Cedarwings · MDR 2017/745</div></div>
+      </div>
+    </div>
+    <nav class="sb-nav" id="sidebar-nav"></nav>
+    <div class="sb-footer" id="sidebar-footer"></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div class="tb-left">
+        <div>
+          <div class="tb-title" id="tb-title">Tableau de bord</div>
+          <div class="tb-sub" id="tb-sub"></div>
+        </div>
+      </div>
+      <div class="tb-right" id="tb-right"></div>
+    </header>
+    <div class="content" id="content"><div class="loading">Chargement...</div></div>
+  </main>
+</div>
+
+<!-- ═══════ MODALS ═══════ -->
+<div class="overlay" id="m-case" onclick="if(event.target===this)closeModal('m-case')">
+  <div class="modal"><div class="mhdr"><h2 id="m-case-title">Nouveau cas</h2><button class="btn btn-sm" onclick="closeModal('m-case')">✕</button></div>
+  <div class="mbody" id="m-case-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-case')">Annuler</button><button class="btn btn-primary" onclick="saveCase()">Enregistrer</button></div></div>
+</div>
+
+<div class="overlay" id="m-step" onclick="if(event.target===this)closeModal('m-step')">
+  <div class="modal modal-lg"><div class="mhdr"><h2 id="m-step-title">Étape de production</h2><button class="btn btn-sm" onclick="closeModal('m-step')">✕</button></div>
+  <div class="mbody" id="m-step-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-step')">Fermer</button><button class="btn btn-primary" id="m-step-submit" onclick="submitStep()" style="display:none">Soumettre pour approbation →</button></div></div>
+</div>
+
+<div class="overlay" id="m-approve" onclick="if(event.target===this)closeModal('m-approve')">
+  <div class="modal"><div class="mhdr"><h2 id="m-approve-title">Approbation</h2><button class="btn btn-sm" onclick="closeModal('m-approve')">✕</button></div>
+  <div class="mbody" id="m-approve-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-approve')">Annuler</button><button class="btn btn-red" onclick="rejectStep()">✕ Rejeter</button><button class="btn btn-green" onclick="approveStep()">✓ Approuver</button></div></div>
+</div>
+
+<div class="overlay" id="m-user" onclick="if(event.target===this)closeModal('m-user')">
+  <div class="modal"><div class="mhdr"><h2 id="m-user-title">Nouvel utilisateur</h2><button class="btn btn-sm" onclick="closeModal('m-user')">✕</button></div>
+  <div class="mbody" id="m-user-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-user')">Annuler</button><button class="btn btn-primary" onclick="saveUser()">Créer l'utilisateur</button></div></div>
+</div>
+
+<div class="overlay" id="m-stock" onclick="if(event.target===this)closeModal('m-stock')">
+  <div class="modal modal-sm"><div class="mhdr"><h2 id="m-stock-title">Article stock</h2><button class="btn btn-sm" onclick="closeModal('m-stock')">✕</button></div>
+  <div class="mbody" id="m-stock-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-stock')">Annuler</button><button class="btn btn-primary" onclick="saveStock()">Enregistrer</button></div></div>
+</div>
+
+<div class="overlay" id="m-nc" onclick="if(event.target===this)closeModal('m-nc')">
+  <div class="modal"><div class="mhdr"><h2 id="m-nc-title">Non-conformité</h2><button class="btn btn-sm" onclick="closeModal('m-nc')">✕</button></div>
+  <div class="mbody" id="m-nc-body"></div>
+  <div class="mfooter"><button class="btn" onclick="closeModal('m-nc')">Annuler</button><button class="btn btn-primary" onclick="saveNC()">Enregistrer</button></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════
+const STEPS_DEF=[
+  {n:1,name:"Réception + Case ID",type:"IP",std:1.5},
+  {n:2,name:"Vérification input",type:"FP",std:3},
+  {n:3,name:"Design traitement",type:"FP",std:14},
+  {n:4,name:"Validation plan",type:"IP",std:4},
+  {n:5,name:"Génération STL + batch",type:"FP",std:3},
+  {n:6,name:"Impression 3D",type:"W2",std:3},
+  {n:7,name:"Post-processing",type:"W2",std:5},
+  {n:8,name:"Thermoformage",type:"FP",std:13},
+  {n:9,name:"Découpe & polissage",type:"FP",std:20},
+  {n:10,name:"Contrôle qualité",type:"FP",std:7},
+  {n:11,name:"Packaging + étiquetage",type:"IP",std:5},
+  {n:12,name:"Préparation livraison",type:"IP",std:2.5},
+  {n:13,name:"Suivi / refinements",type:"IP",std:2},
+];
+const QC_GROUPS=[
+  {g:"Inspection visuelle",checks:["Surface lisse, sans aspérités ni rayures","Pas de bulles, inclusions ou zones opaques","Transparence homogène","Pas de décoloration ni tache"]},
+  {g:"Géométrie & ajustement",checks:["Thermoformage complet — aucune zone non plaquée","Pas de décollement sur les molaires","Ajustement correct sur le modèle de référence","Pas de déformation interdentaire"]},
+  {g:"Finition & découpe",checks:["Bords — ligne propre, pas de coupant","Polissage uniforme — aucune rugosité","Pas de bavure sur le bord gingival","Épaisseur uniforme sur la surface"]},
+  {g:"Contrôle dimensionnel",checks:["Épaisseur nominale ±0.05mm (antérieure)","Épaisseur nominale ±0.05mm (postérieure)","Hauteur gingival conforme au plan"]},
+  {g:"Marquage & traçabilité",checks:["Numéro d'étape lisible","Case ID correct","Indication max./mand. correcte","N° lot matière renseigné"]},
+  {g:"Packaging & Documentation MDR",checks:["Quantité conforme à la prescription","Étiquette MDR complète","Notice d'utilisation présente","Déclaration conformité (Annexe XIII)","Emballage intact et scellé","Case ID + praticien lisibles"]},
+];
+const QC_CHECKS=QC_GROUPS.flatMap(g=>g.checks);
+const NC_TYPES=["Dimension hors tolérance","Bord coupant","Bulle ou inclusion","Décollement thermoformage","Transparence insuffisante","Marquage illisible","Erreur traçabilité","Quantité incorrecte","Autre"];
+const ROLES_LABEL={super_admin:"Super Admin",admin:"Admin / QC",technician:"Technicien"};
+const STATUS_COL={queued:"gray",in_production:"blue",pending_qc:"amber",completed:"green",on_hold:"red"};
+const STATUS_LABEL={queued:"En attente",in_production:"En production",pending_qc:"QC en attente",completed:"Terminé",on_hold:"En attente"};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let sb=null;
+let P=null; // current profile
+let ST={page:"dashboard",caseFilter:"all",stockCat:"Tous",ncFilter:"Tous",pendingCount:0};
+let _modal={}; // working data for modals
+let timerState={active:false,stepExId:null,sessionId:null,startedAt:null,elapsed:0,intervalId:null};
+let realtimeSub=null;
+
+// ═══════════════════════════════════════════════════════
+// CONFIG & AUTH
+// ═══════════════════════════════════════════════════════
+function getConfig(){try{return JSON.parse(localStorage.getItem('ba:cfg')||'null');}catch(e){return null;}}
+function saveConfig(){
+  const url=document.getElementById('sb-url').value.trim();
+  const key=document.getElementById('sb-key').value.trim();
+  if(!url||!key){showErr('setup-err','Veuillez remplir les deux champs.');return;}
+  if(!url.includes('supabase.co')){showErr('setup-err','URL invalide — doit contenir supabase.co');return;}
+  localStorage.setItem('ba:cfg',JSON.stringify({url,key}));
+  initApp();
+}
+function showSetup(){screen('sc-setup');}
+async function initApp(){
+  const cfg=getConfig();
+  if(!cfg){screen('sc-setup');return;}
+  const {createClient}=supabase;
+  sb=createClient(cfg.url,cfg.key,{auth:{persistSession:true}});
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    await loadProfile(session.user.id);
+    showApp();
+  } else {
+    screen('sc-login');
+  }
+}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  if(!email||!pw){showErr('login-err','Email et mot de passe requis.');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true;btn.textContent='Connexion...';
+  const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+  btn.disabled=false;btn.textContent='Se connecter →';
+  if(error){showErr('login-err','Identifiants incorrects.');return;}
+  await loadProfile(data.user.id);
+  showApp();
+}
+async function doLogout(){
+  clearTimer();
+  if(realtimeSub)sb.removeChannel(realtimeSub);
+  await sb.auth.signOut();
+  P=null;
+  screen('sc-login');
+}
+async function loadProfile(uid){
+  const {data}=await sb.from('profiles').select('*').eq('id',uid).single();
+  P=data;
+  if(!P){P={id:uid,full_name:'User',initials:'U',role:'technician',assigned_steps:[]};}
+}
+function showApp(){
+  screen('sc-app');
+  buildSidebar();
+  setTopbar();
+  setupRealtime();
+  nav(P.role==='technician'?'mywork':'dashboard');
+}
+function screen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+}
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show');}
+
+// ═══════════════════════════════════════════════════════
+// REALTIME
+// ═══════════════════════════════════════════════════════
+function setupRealtime(){
+  if(realtimeSub)sb.removeChannel(realtimeSub);
+  realtimeSub=sb.channel('prod').on('postgres_changes',{event:'*',schema:'public',table:'step_executions'},()=>{
+    updatePendingCount();
+    if(ST.page==='approval')renderApproval();
+    if(ST.page==='mywork')renderMyWork();
+  }).subscribe();
+  updatePendingCount();
+}
+async function updatePendingCount(){
+  if(!P||P.role==='technician')return;
+  const {count}=await sb.from('step_executions').select('id',{count:'exact',head:true}).eq('status','pending_approval');
+  ST.pendingCount=count||0;
+  const el=document.getElementById('sb-notif-approval');
+  if(el)el.textContent=ST.pendingCount>0?ST.pendingCount:'';
+  if(el)el.style.display=ST.pendingCount>0?'inline':'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// SIDEBAR + TOPBAR
+// ═══════════════════════════════════════════════════════
+function icon(path){return`<svg width="14" height="14" viewBox="0 0 16 16" fill="none">${path}</svg>`;}
+const ICONS={
+  dashboard:`<rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".3"/>`,
+  cases:`<rect x="2" y="2" width="12" height="3" rx="1" fill="currentColor"/><rect x="2" y="7" width="9" height="2" rx="1" fill="currentColor" opacity=".6"/><rect x="2" y="11" width="6" height="2" rx="1" fill="currentColor" opacity=".4"/>`,
+  work:`<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M6 8l1.5 1.5L10.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  approval:`<path d="M2 4h12M2 8h8M2 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="13" cy="11" r="2.5" stroke="currentColor" stroke-width="1.3"/>`,
+  qc:`<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 8l2 2 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  stock:`<path d="M2 5l6-3 6 3v6l-6 3-6-3V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 2v12M2 5l6 3 6-3" stroke="currentColor" stroke-width="1.3"/>`,
+  attendance:`<circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5"/>`,
+  users:`<circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 13c0-2.8 2.2-5 5-5h.5M11 10l2 2 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>`,
+  nc:`<path d="M8 2L14 13H2L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6v3M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  logout:`<path d="M10 3h3v10h-3M7 10l3-3-3-3M10 8H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`,
+};
+function sbLink(page,label,iconKey,notifId){
+  return`<div class="sb-link${ST.page===page?' active':''}" data-nav="${page}" onclick="nav('${page}')">
+    ${icon(ICONS[iconKey])}${label}
+    ${notifId?`<span class="sb-notif" id="${notifId}" style="display:none"></span>`:''}
+  </div>`;
+}
+function buildSidebar(){
+  const nav=document.getElementById('sidebar-nav');
+  let html='';
+  if(P.role==='technician'){
+    html+=`<div class="sb-sec">Production</div>`;
+    html+=sbLink('mywork','Mes tâches','work');
+    html+=`<div class="sb-sec">Présence</div>`;
+    html+=sbLink('attendance','Pointage','attendance');
+  } else {
+    html+=`<div class="sb-sec">Production</div>`;
+    html+=sbLink('dashboard','Tableau de bord','dashboard');
+    html+=sbLink('cases','Gestion des cas','cases');
+    html+=sbLink('approval','File d\'approbation','approval','sb-notif-approval');
+    html+=`<div class="sb-sec">Qualité</div>`;
+    html+=sbLink('qc','Contrôle qualité','qc');
+    html+=sbLink('nc','Non-conformités','nc');
+    html+=`<div class="sb-sec">Opérations</div>`;
+    html+=sbLink('stock','Stocks & consommables','stock');
+    html+=sbLink('attendance','Présences','attendance');
+    if(P.role==='super_admin'){
+      html+=`<div class="sb-sec">Administration</div>`;
+      html+=sbLink('users','Utilisateurs','users');
+    }
+  }
+  html+=`<div class="sb-sec">Compte</div>`;
+  html+=`<div class="sb-link" onclick="doLogout()">${icon(ICONS.logout)}Déconnexion</div>`;
+  nav.innerHTML=html;
+  document.getElementById('sidebar-footer').innerHTML=`
+    <div class="sb-user">
+      <div class="sb-avatar">${P.initials||P.full_name[0]}</div>
+      <div><div class="sb-uname">${P.full_name}</div><div class="sb-urole">${ROLES_LABEL[P.role]||P.role}</div></div>
+    </div>
+    <div class="sb-stat"><span class="sb-sl">Rôle</span><span class="sb-sv">${P.role}</span></div>`;
+}
+function setTopbar(){
+  const titles={dashboard:'Tableau de bord',cases:'Cas patients',approval:'File d\'approbation',qc:'Contrôle qualité',stock:'Stocks & consommables',attendance:'Présences',users:'Utilisateurs',mywork:'Mes tâches',nc:'Non-conformités'};
+  document.getElementById('tb-title').textContent=titles[ST.page]||ST.page;
+  document.getElementById('tb-sub').textContent='BloomAligner · '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const right=document.getElementById('tb-right');
+  if(P.role!=='technician'){
+    right.innerHTML=`<button class="btn btn-primary" onclick="openCaseModal()">+ Nouveau cas</button>`;
+  } else {
+    // Clock in/out button
+    right.innerHTML=`<button class="btn" id="clock-btn" onclick="toggleClock()">...</button>`;
+    updateClockBtn();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function nav(page){
+  ST.page=page;
+  document.querySelectorAll('.sb-link[data-nav]').forEach(el=>el.classList.toggle('active',el.dataset.nav===page));
+  document.getElementById('tb-title').textContent=({dashboard:'Tableau de bord',cases:'Cas patients',approval:"File d'approbation",qc:'Contrôle qualité',stock:'Stocks & consommables',attendance:'Présences',users:'Utilisateurs',mywork:'Mes tâches',nc:'Non-conformités'})[page]||page;
+  render();
+}
+function render(){
+  const fns={dashboard:renderDashboard,cases:renderCases,approval:renderApproval,qc:renderQC,stock:renderStock,attendance:renderAttendance,users:renderUsers,mywork:renderMyWork,nc:renderNC};
+  (fns[ST.page]||renderDashboard)();
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2400);}
+function badge(l,cl){return`<span class="badge b-${cl}">${l}</span>`;}
+function statusBadge(s){return badge(STATUS_LABEL[s]||s,STATUS_COL[s]||'gray');}
+function kpi(l,v,s='',cc=''){return`<div class="kpi"><div class="kpi-l">${l}</div><div class="kpi-v ${cc}">${v}</div>${s?`<div class="kpi-s">${s}</div>`:''}</div>`;}
+function loading(){document.getElementById('content').innerHTML=`<div class="loading">Chargement...</div>`;}
+function fmtSec(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return h>0?`${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
+function fmtFRU(s){return(s/300).toFixed(1)+' FRU';}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ═══════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════
+async function startTimer(stepExId,caseRef,stepName){
+  if(timerState.active)await stopTimer();
+  const {data:session}=await sb.from('timer_sessions').insert({step_execution_id:stepExId,employee_id:P.id,started_at:new Date().toISOString()}).select().single();
+  if(!session)return;
+  timerState={active:true,stepExId,sessionId:session.id,startedAt:new Date(),elapsed:0,intervalId:null,caseRef,stepName};
+  await sb.from('step_executions').update({status:'in_progress'}).eq('id',stepExId);
+  timerState.intervalId=setInterval(()=>{
+    timerState.elapsed=Math.floor((new Date()-timerState.startedAt)/1000);
+    updateTimerDisplay();
+  },1000);
+  updateTimerDisplay();
+}
+async function stopTimer(){
+  if(!timerState.active)return;
+  clearInterval(timerState.intervalId);
+  const dur=Math.floor((new Date()-timerState.startedAt)/1000);
+  await sb.from('timer_sessions').update({stopped_at:new Date().toISOString(),duration_seconds:dur}).eq('id',timerState.sessionId);
+  const {data:step}=await sb.from('step_executions').select('total_seconds').eq('id',timerState.stepExId).single();
+  const total=(step?.total_seconds||0)+dur;
+  await sb.from('step_executions').update({total_seconds:total,fru_actual:parseFloat((total/300).toFixed(2))}).eq('id',timerState.stepExId);
+  timerState.active=false;
+  updateTimerDisplay();
+}
+function clearTimer(){clearInterval(timerState.intervalId);timerState={active:false,stepExId:null,sessionId:null,startedAt:null,elapsed:0,intervalId:null};}
+function updateTimerDisplay(){
+  const card=document.getElementById('timer-widget');if(!card)return;
+  card.className='timer-card'+(timerState.active?' timer-running':'');
+  const disp=document.getElementById('timer-disp');const fru=document.getElementById('timer-fru');
+  if(disp)disp.textContent=fmtSec(timerState.elapsed);
+  if(fru)fru.textContent=fmtFRU(timerState.elapsed);
+}
+
+// ═══════════════════════════════════════════════════════
+// ATTENDANCE (CLOCK IN/OUT)
+// ═══════════════════════════════════════════════════════
+let currentAttendance=null;
+async function updateClockBtn(){
+  const {data}=await sb.from('attendance').select('*').eq('employee_id',P.id).is('clock_out',null).order('clock_in',{ascending:false}).limit(1);
+  currentAttendance=data?.[0]||null;
+  const btn=document.getElementById('clock-btn');
+  if(!btn)return;
+  if(currentAttendance){
+    btn.textContent='⏹ Pointer sortie';btn.className='btn btn-red';
+  } else {
+    btn.textContent='⏱ Pointer entrée';btn.className='btn btn-green';
+  }
+}
+async function toggleClock(){
+  if(currentAttendance){
+    const now=new Date();const ci=new Date(currentAttendance.clock_in);const mins=Math.floor((now-ci)/60000);
+    await sb.from('attendance').update({clock_out:now.toISOString(),total_minutes:mins}).eq('id',currentAttendance.id);
+    toast(`Sortie pointée — ${mins} min travaillées`);currentAttendance=null;
+  } else {
+    const {data}=await sb.from('attendance').insert({employee_id:P.id,clock_in:new Date().toISOString(),work_date:new Date().toISOString().slice(0,10)}).select().single();
+    currentAttendance=data;toast('Entrée pointée ✓');
+  }
+  updateClockBtn();
+  if(ST.page==='attendance')renderAttendance();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: DASHBOARD
+// ═══════════════════════════════════════════════════════
+async function renderDashboard(){
+  loading();
+  const [casesR,stepsR,stockR,ncR,attR]=await Promise.all([
+    sb.from('cases').select('*'),
+    sb.from('step_executions').select('*'),
+    sb.from('stock_items').select('*'),
+    sb.from('non_conformities').select('*'),
+    sb.from('attendance').select('*').gte('work_date',new Date().toISOString().slice(0,10)),
+  ]);
+  const cases=casesR.data||[];const steps=stepsR.data||[];
+  const stock=stockR.data||[];const ncs=ncR.data||[];const att=attR.data||[];
+  const alerts=stock.filter(s=>s.quantity<=s.min_quantity).length;
+  const pending=steps.filter(s=>s.status==='pending_approval').length;
+  const completed=cases.filter(c=>c.status==='completed').length;
+  const inProd=cases.filter(c=>c.status==='in_production').length;
+  const openNc=ncs.filter(n=>n.status==='Ouverte').length;
+  const todayPresent=att.filter(a=>!a.clock_out).length;
+  const ce=document.getElementById('content');
+  ce.innerHTML=`
+    <div class="kpi-grid kg4">
+      ${kpi('Cas total',cases.length,completed+' terminés · '+inProd+' en production')}
+      ${kpi('En approbation',pending,'étapes en attente',pending>0?'c-amber':'')}
+      ${kpi('NC ouvertes',openNc,openNc>0?'action requise':'',openNc>0?'c-red':'')}
+      ${kpi('Alertes stock',alerts,alerts>0?'réapprovisionnement':'Stocks OK',alerts>0?'c-red':'c-green')}
+    </div>
+    <div class="card-2eq" style="margin-bottom:14px">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><div class="card-title">Statut des cas</div></div>
+        ${cases.length===0?`<div style="color:var(--t3);font-size:12px">Aucun cas</div>`:['queued','in_production','pending_qc','completed','on_hold'].map(s=>{const c=cases.filter(x=>x.status===s).length;if(!c)return'';return`<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:12px"><div style="flex:1">${STATUS_LABEL[s]}</div><div style="width:90px"><div class="prog"><div class="prog-f" style="width:${c/cases.length*100}%;background:var(--${STATUS_COL[s]==='green'?'green':STATUS_COL[s]==='amber'?'amber':STATUS_COL[s]==='red'?'red':STATUS_COL[s]==='blue'?'blue':'gray'})"></div></div></div><span class="mono" style="font-size:11px;min-width:20px;text-align:right">${c}</span></div>`;}).join('')}
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><div class="card-title">Étapes du jour</div></div>
+        ${[{l:'Verrouillées',s:'locked',c:'gray'},{l:'Disponibles',s:'available',c:'blue'},{l:'En cours',s:'in_progress',c:'blue'},{l:'En approbation',s:'pending_approval',c:'amber'},{l:'Approuvées',s:'approved',c:'green'},{l:'Rejetées',s:'rejected',c:'red'}].map(({l,s,c})=>{const cnt=steps.filter(x=>x.status===s).length;return`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:12px"><span>${l}</span><span class="mono c-${c}" style="font-weight:700">${cnt}</span></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-header"><div class="card-title">Derniers cas</div><button class="btn btn-sm" onclick="nav('cases')">Voir tout →</button></div>
+      ${cases.length===0?`<div style="color:var(--t3);font-size:12px">Aucun cas créé</div>`:`
+      <div class="tw"><table><thead><tr><th>Case ID</th><th>Patient</th><th>Praticien</th><th>Aligneurs</th><th>Statut</th><th>Progression</th></tr></thead>
+      <tbody>${cases.slice(0,8).map(c=>{const cSteps=steps.filter(s=>s.case_id===c.id);const done=cSteps.filter(s=>s.status==='approved').length;const pct=Math.round(done/13*100);return`<tr onclick="openCaseSteps('${c.id}')" style="cursor:pointer"><td><strong class="mono" style="font-size:11px">${c.case_ref}</strong></td><td>${c.patient_ref||'—'}</td><td>${c.dentist_name||'—'}</td><td>${c.aligners_count}</td><td>${statusBadge(c.status)}</td><td style="min-width:100px"><div style="display:flex;align-items:center;gap:7px"><div class="prog" style="flex:1"><div class="prog-f" style="width:${pct}%;background:${pct===100?'var(--green)':pct>50?'var(--blue)':'var(--t3)'}"></div></div><span style="font-size:10px;color:var(--t3)" class="mono">${done}/13</span></div></td></tr>`;}).join('')}</tbody></table></div>`}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: CASES
+// ═══════════════════════════════════════════════════════
+async function renderCases(){
+  loading();
+  const {data:cases}=await sb.from('cases').select('*, step_executions(status)').order('created_at',{ascending:false});
+  const all=cases||[];
+  const fil=ST.caseFilter;
+  const vis=fil==='all'?all:all.filter(c=>c.status===fil);
+  document.getElementById('content').innerHTML=`
+    <div class="sec-hdr"><h2>Cas patients <span style="font-size:12px;color:var(--t3);font-weight:400">(${all.length})</span></h2><button class="btn btn-primary" onclick="openCaseModal()">+ Nouveau cas</button></div>
+    <div class="filter-bar"><span style="font-size:10px;color:var(--t3)">Statut :</span>
+      ${['all','queued','in_production','pending_qc','completed','on_hold'].map(s=>`<span class="pill${fil===s?' active':''}" onclick="ST.caseFilter='${s}';renderCases()">${s==='all'?'Tous':STATUS_LABEL[s]}</span>`).join('')}
+    </div>
+    <div class="card" style="padding:0">
+      ${!vis.length?`<div class="empty"><div class="empty-icon">🗂</div><h3>Aucun cas</h3><p>Créez votre premier cas de production.</p><button class="btn btn-primary" onclick="openCaseModal()">+ Créer un cas</button></div>`:`
+      <div class="tw"><table>
+        <thead><tr><th>Case ID</th><th>Patient</th><th>Praticien</th><th style="text-align:center">Alg.</th><th>Complexité</th><th>Statut</th><th>Progression</th><th>Actions</th></tr></thead>
+        <tbody>${vis.map(c=>{const done=(c.step_executions||[]).filter(s=>s.status==='approved').length;const pct=Math.round(done/13*100);return`<tr>
+          <td><strong class="mono" style="font-size:11px">${c.case_ref}</strong></td>
+          <td>${c.patient_ref||'—'}</td><td>${c.dentist_name||'—'}</td>
+          <td style="text-align:center">${c.aligners_count}</td>
+          <td>${badge(c.complexity,{Simple:'green',Modéré:'amber',Complexe:'red'}[c.complexity]||'gray')}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td style="min-width:110px"><div style="display:flex;align-items:center;gap:7px"><div class="prog" style="flex:1"><div class="prog-f" style="width:${pct}%;background:${pct===100?'var(--green)':pct>50?'var(--blue)':'var(--t3)'}"></div></div><span style="font-size:10px;color:var(--t3)" class="mono">${done}/13</span></div></td>
+          <td><div style="display:flex;gap:4px"><button class="btn btn-sm" onclick="openCaseSteps('${c.id}')">Étapes</button><button class="btn btn-sm" onclick="openCaseModal('${c.id}')">Éditer</button><button class="btn btn-sm" style="color:var(--red)" onclick="deleteCase('${c.id}')">✕</button></div></td>
+        </tr>`;}).join('')}</tbody>
+      </table></div>`}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CASE STEPS VIEW
+// ═══════════════════════════════════════════════════════
+async function openCaseSteps(caseId){
+  const {data:c}=await sb.from('cases').select('*').eq('id',caseId).single();
+  const {data:steps}=await sb.from('step_executions').select('*, profiles(full_name)').eq('case_id',caseId).order('step_number');
+  const {data:profiles}=await sb.from('profiles').select('*').eq('active',true);
+  const stepsMap={};(steps||[]).forEach(s=>stepsMap[s.step_number]=s);
+  document.getElementById('m-step-title').textContent=`${c.case_ref} — ${c.patient_ref||'Patient'} — Étapes`;
+  document.getElementById('m-step-submit').style.display='none';
+  let html=`<div class="kpi-grid kg3" style="margin-bottom:14px">
+    ${kpi('Aligneurs',c.aligners_count,c.complexity)}
+    ${kpi('Praticien',c.dentist_name||'—','')}
+    ${kpi('Statut',STATUS_LABEL[c.status],'',STATUS_COL[c.status]==='green'?'c-green':STATUS_COL[c.status]==='amber'?'c-amber':STATUS_COL[c.status]==='red'?'c-red':'')}
+  </div>`;
+  STEPS_DEF.forEach(sd=>{
+    const se=stepsMap[sd.n];
+    const statClass={'locked':'locked','available':'available','in_progress':'in-progress','pending_approval':'pending','approved':'approved','rejected':'rejected'}[se?.status||'locked']||'locked';
+    const assignedName=se?.profiles?.full_name||'—';
+    const fru=se?.fru_actual?se.fru_actual+' FRU':'—';
+    const secs=se?.total_seconds?fmtSec(se.total_seconds):'—';
+    html+=`<div class="step-card ${statClass}">
+      <div class="step-hdr">
+        <div class="step-num">${sd.n}</div>
+        <div style="flex:1"><div class="step-name">${sd.name}</div><div class="step-meta">${assignedName} · ${fru} · ${secs}</div></div>
+        ${badge({FP:'FP',IP:'IP',W1:'W1',W2:'W2'}[sd.type]||sd.type,''+sd.type.toLowerCase())}
+        ${se?badge({locked:'Verrouillé',available:'Disponible',in_progress:'En cours',pending_approval:'En approbation',approved:'Approuvé',rejected:'Rejeté'}[se.status]||se.status,{locked:'gray',available:'blue',in_progress:'blue',pending_approval:'amber',approved:'green',rejected:'red'}[se.status]||'gray'):''}
+        ${se&&(se.status==='locked'||se.status==='available')&&profiles?`<select style="font-size:11px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;margin-left:4px" onchange="assignStep('${se.id}',this.value)"><option value="">Assigner...</option>${profiles.map(p=>`<option value="${p.id}"${se.assigned_to===p.id?' selected':''}>${p.full_name}</option>`).join('')}</select>`:''}
+      </div>
+      ${se?.rejection_reason?`<div class="alert-box alert-danger" style="margin:0 13px 10px;font-size:11px">Rejet: ${se.rejection_reason}</div>`:''}
+    </div>`;
+  });
+  document.getElementById('m-step-body').innerHTML=html;
+  openModal('m-step');
+}
+async function assignStep(stepId,userId){
+  await sb.from('step_executions').update({assigned_to:userId||null}).eq('id',stepId);
+  toast('Assigné ✓');
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: MY WORK (TECHNICIAN)
+// ═══════════════════════════════════════════════════════
+async function renderMyWork(){
+  loading();
+  const {data:mySteps}=await sb.from('step_executions').select('*, cases(case_ref,patient_ref,aligners_count,complexity,dentist_name)').eq('assigned_to',P.id).in('status',['available','in_progress','pending_approval','rejected']).order('created_at');
+  const steps=mySteps||[];
+  const available=steps.filter(s=>s.status==='available'||s.status==='rejected');
+  const inProgress=steps.filter(s=>s.status==='in_progress');
+  const pending=steps.filter(s=>s.status==='pending_approval');
+  const ce=document.getElementById('content');
+  let html='';
+  // Timer widget
+  html+=`<div class="timer-card${timerState.active?' timer-running':''}" id="timer-widget">
+    <div class="timer-case">${timerState.active?(timerState.caseRef||''):'Aucun travail en cours'}</div>
+    <div class="timer-step">${timerState.active?(timerState.stepName||''):'Sélectionnez une étape pour commencer'}</div>
+    <div class="timer-display" id="timer-disp">${fmtSec(timerState.elapsed)}</div>
+    <div class="timer-fru" id="timer-fru">${fmtFRU(timerState.elapsed)}</div>
+    <div class="timer-actions">
+      ${timerState.active?`<button class="timer-btn timer-stop" onclick="handleTimerStop()">⏸ Pause & Sauvegarder</button><button class="timer-btn" style="background:rgba(255,255,255,.12);color:#fff" onclick="openStepForm('${timerState.stepExId}')">Remplir le formulaire →</button>`:
+      '<span style="font-size:12px;color:rgba(255,255,255,.4)">Cliquez sur une étape ci-dessous pour démarrer</span>'}
+    </div>
+  </div>`;
+  if(inProgress.length||available.length){
+    html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Étapes disponibles (${available.length+inProgress.length})</div>`;
+    [...inProgress,...available].forEach(se=>{
+      const c=se.cases;const sd=STEPS_DEF.find(s=>s.n===se.step_number)||{};
+      const statClass={in_progress:'in-progress',available:'available',rejected:'rejected'}[se.status]||'available';
+      html+=`<div class="step-card ${statClass}">
+        <div class="step-hdr" onclick="openStepForm('${se.id}')">
+          <div class="step-num">${se.step_number}</div>
+          <div style="flex:1">
+            <div class="step-name">${se.step_name}</div>
+            <div class="step-meta">${c?.case_ref||''} · ${c?.patient_ref||''} · Std: ${sd.std||'?'} FRU</div>
+          </div>
+          ${badge(se.step_type||'FP',(se.step_type||'fp').toLowerCase())}
+          ${badge({in_progress:'En cours',available:'Disponible',rejected:'Rejeté'}[se.status]||se.status,{in_progress:'blue',available:'green',rejected:'red'}[se.status]||'gray')}
+          ${se.total_seconds?`<span class="mono" style="font-size:11px;color:var(--t2)">${fmtSec(se.total_seconds)}</span>`:''}
+        </div>
+        ${se.rejection_reason?`<div class="alert-box alert-danger" style="margin:0 13px 10px;font-size:11px">Raison du rejet: ${se.rejection_reason}</div>`:''}
+      </div>`;
+    });
+  }
+  if(pending.length){
+    html+=`<div style="font-size:10px;font-weight:700;letter-spacing:.07em;color:var(--t3);margin:14px 0 8px;text-transform:uppercase">En attente d'approbation (${pending.length})</div>`;
+    pending.forEach(se=>{const c=se.cases;html+=`<div class="step-card pending"><div class="step-hdr"><div class="step-num">${se.step_number}</div><div style="flex:1"><div class="step-name">${se.step_name}</div><div class="step-meta">${c?.case_ref||''} · soumis le ${new Date(se.submitted_at).toLocaleDateString('fr-FR')}</div></div>${badge('En approbation','amber')}</div></div>`;});
+  }
+  if(!steps.length)html+=`<div class="empty"><div class="empty-icon">✅</div><h3>Aucune tâche assignée</h3><p>Votre responsable vous assignera des étapes de production.</p></div>`;
+  ce.innerHTML=html;
+}
+async function handleTimerStop(){await stopTimer();renderMyWork();}
+
+// ═══════════════════════════════════════════════════════
+// STEP FORM (TECHNICIAN)
+// ═══════════════════════════════════════════════════════
+async function openStepForm(stepId){
+  const {data:se}=await sb.from('step_executions').select('*, cases(case_ref,patient_ref,aligners_count)').eq('id',stepId).single();
+  if(!se)return;
+  const sd=STEPS_DEF.find(s=>s.n===se.step_number)||{};
+  const isTimer=timerState.active&&timerState.stepExId===stepId;
+  const fields=se.fields||{};const trace=se.trace_data||{};
+  const PROC_FIELDS={
+    6:[{k:'resin_lot',l:'N° lot résine',ph:'LOT-RESINE-001'},{k:'printer_id',l:'ID imprimante',ph:'PRINTER-01'},{k:'layer_h',l:'Hauteur couche (mm)',ph:'0.05'},{k:'temp',l:'Température (°C)',ph:'22'},{k:'humidity',l:'Humidité (%)',ph:'45'}],
+    7:[{k:'ipa_lot',l:'N° lot IPA',ph:'LOT-IPA-001'},{k:'wash_time',l:'Durée lavage (min)',ph:'5'},{k:'uv_unit',l:'ID station UV',ph:'UV-01'},{k:'uv_dur',l:'Durée curing (min)',ph:'10'}],
+    8:[{k:'film_lot',l:'N° lot film',ph:'LOT-FILM-001'},{k:'film_thick',l:'Épaisseur film (mm)',ph:'0.75'},{k:'machine_id',l:'ID thermoformeuse',ph:'TF-01'},{k:'temp_set',l:'Température (°C)',ph:'180'},{k:'pressure',l:'Pression (bar)',ph:'4'}],
+  };
+  _modal.stepId=stepId;_modal.se=se;_modal.fields={...fields};_modal.trace={...trace};
+  let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;background:var(--acc);border-radius:10px;color:#fff">
+    <div style="font-size:28px;font-weight:700;font-family:'DM Mono',monospace">${fmtSec(isTimer?timerState.elapsed:se.total_seconds||0)}</div>
+    <div style="flex:1"><div style="font-size:13px;font-weight:600">${se.step_name}</div><div style="font-size:11px;opacity:.6">${se.cases?.case_ref||''} · ${fmtFRU(isTimer?timerState.elapsed:se.total_seconds||0)}</div></div>
+    ${se.status==='available'||se.status==='rejected'?`<button class="timer-btn timer-start" onclick="startTimerFromForm('${stepId}','${se.cases?.case_ref||''}','${se.step_name}')">▶ Démarrer</button>`:''}
+    ${isTimer?`<button class="timer-btn timer-stop" onclick="handleTimerStop();openStepForm('${stepId}')">⏸ Pause</button>`:''}
+  </div>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+  <div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--t3);margin-bottom:10px;text-transform:uppercase">Données de production</div>
+    <div class="field"><label>Note opérateur</label><textarea rows="2" style="resize:vertical" placeholder="Observations..." onchange="_modal.fields.note=this.value">${fields.note||''}</textarea></div>
+    ${PROC_FIELDS[se.step_number]?PROC_FIELDS[se.step_number].map(f=>`<div class="field"><label>${f.l}</label><input value="${trace[f.k]||''}" placeholder="${f.ph}" onchange="_modal.trace['${f.k}']=this.value"></div>`).join(''):''}
+  </div>
+  <div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--t3);margin-bottom:10px;text-transform:uppercase">Traçabilité MDR</div>
+    <div class="field"><label>Opérateur (initiales)</label><input value="${trace.operator||P.initials||''}" placeholder="${P.initials||''}" onchange="_modal.trace.operator=this.value"></div>
+    <div class="field"><label>ID machine / équipement</label><input value="${trace.machine||''}" placeholder="MACHINE-01" onchange="_modal.trace.machine=this.value"></div>
+    <div class="field"><label>N° lot matière principale</label><input value="${trace.lot_mat||''}" placeholder="LOT-001" onchange="_modal.trace.lot_mat=this.value"></div>
+    <div class="fr fr2">
+      <div class="field"><label>Début</label><input type="time" value="${trace.start_time||''}" onchange="_modal.trace.start_time=this.value"></div>
+      <div class="field"><label>Fin</label><input type="time" value="${trace.end_time||''}" onchange="_modal.trace.end_time=this.value"></div>
+    </div>
+  </div></div>`;
+  document.getElementById('m-step-title').textContent=`S${se.step_number} · ${se.step_name}`;
+  document.getElementById('m-step-body').innerHTML=html;
+  const submitBtn=document.getElementById('m-step-submit');
+  submitBtn.style.display=se.status!=='pending_approval'&&se.status!=='approved'?'inline-flex':'none';
+  openModal('m-step');
+}
+async function startTimerFromForm(stepId,caseRef,stepName){
+  await startTimer(stepId,caseRef,stepName);
+  closeModal('m-step');
+  renderMyWork();
+}
+async function submitStep(){
+  if(!_modal.stepId)return;
+  await sb.from('step_executions').update({fields:_modal.fields,trace_data:_modal.trace,status:'pending_approval',submitted_at:new Date().toISOString()}).eq('id',_modal.stepId);
+  closeModal('m-step');toast('Soumis pour approbation ✓');
+  if(timerState.stepExId===_modal.stepId)clearTimer();
+  renderMyWork();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: APPROVAL QUEUE
+// ═══════════════════════════════════════════════════════
+async function renderApproval(){
+  loading();
+  const {data}=await sb.from('step_executions').select('*, cases(case_ref,patient_ref,aligners_count,complexity), profiles!step_executions_assigned_to_fkey(full_name)').eq('status','pending_approval').order('submitted_at');
+  const pending=data||[];
+  const ce=document.getElementById('content');
+  if(!pending.length){ce.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><h3>File vide</h3><p>Aucune étape en attente d'approbation. Tout est à jour.</p></div>`;return;}
+  ce.innerHTML=`<div style="font-size:13px;font-weight:600;margin-bottom:14px">${pending.length} étape${pending.length>1?'s':''} en attente d'approbation</div>
+  ${pending.map(se=>{
+    const c=se.cases;const trace=se.trace_data||{};const fields=se.fields||{};
+    return`<div class="appr-card">
+      <div class="appr-hdr" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span class="appr-case">${c?.case_ref||'—'}</span>
+        <span class="appr-step">S${se.step_number} · ${se.step_name}</span>
+        ${badge(se.profiles?.full_name||'—','acc')}
+        ${badge(fmtFRU(se.total_seconds||0),'blue')}
+        <span style="font-size:10px;color:var(--t3)">${se.submitted_at?new Date(se.submitted_at).toLocaleDateString('fr-FR'):''}</span>
+        <span style="font-size:10px;color:var(--acc)">▼</span>
+      </div>
+      <div class="appr-body" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t3);margin-bottom:6px;text-transform:uppercase">Traçabilité</div>
+            ${[['Opérateur',trace.operator],['Machine',trace.machine],['Lot matière',trace.lot_mat],['Heure début',trace.start_time],['Heure fin',trace.end_time]].map(([k,v])=>v?`<div class="field-row"><span class="field-key">${k}</span><span class="field-val">${v}</span></div>`:''  ).join('')}
+            ${Object.entries(trace).filter(([k])=>!['operator','machine','lot_mat','start_time','end_time'].includes(k)&&trace[k]).map(([k,v])=>`<div class="field-row"><span class="field-key">${k}</span><span class="field-val">${v}</span></div>`).join('')}
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:var(--t3);margin-bottom:6px;text-transform:uppercase">Données production</div>
+            ${fields.note?`<div style="font-size:12px;color:var(--t2);background:var(--s2);border-radius:6px;padding:8px;line-height:1.5">${fields.note}</div>`:'<div style="color:var(--t3);font-size:12px">Aucune note</div>'}
+            <div style="margin-top:10px;display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t2)">Temps total</span><strong class="mono">${fmtSec(se.total_seconds||0)}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--t2)">FRU réel</span><strong class="mono">${fmtFRU(se.total_seconds||0)}</strong></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-green" onclick="quickApprove('${se.id}')">✓ Approuver</button>
+          <button class="btn btn-sm" style="color:var(--red);border-color:var(--bdr)" onclick="openRejectModal('${se.id}','${se.step_name}','${se.cases?.case_ref||''}')">✕ Rejeter...</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+async function quickApprove(stepId){
+  await sb.from('step_executions').update({status:'approved',approved_at:new Date().toISOString(),approved_by:P.id}).eq('id',stepId);
+  await unlockNextStep(stepId);
+  toast('Étape approuvée ✓');renderApproval();updatePendingCount();
+}
+async function unlockNextStep(stepId){
+  const {data:se}=await sb.from('step_executions').select('*').eq('id',stepId).single();
+  if(!se)return;
+  const {data:next}=await sb.from('step_executions').select('*').eq('case_id',se.case_id).eq('step_number',se.step_number+1).single();
+  if(next&&next.status==='locked')await sb.from('step_executions').update({status:'available'}).eq('id',next.id);
+  // Check if all steps done → mark case complete
+  const {data:all}=await sb.from('step_executions').select('status').eq('case_id',se.case_id);
+  if(all&&all.every(s=>s.status==='approved'))await sb.from('cases').update({status:'completed'}).eq('id',se.case_id);
+}
+function openRejectModal(stepId,stepName,caseRef){
+  _modal.rejectStepId=stepId;
+  document.getElementById('m-approve-title').textContent=`Rejeter — ${caseRef} · ${stepName}`;
+  document.getElementById('m-approve-body').innerHTML=`<div class="alert-box alert-warn" style="margin-bottom:12px">L'étape sera renvoyée à l'employé pour correction.</div><div class="field"><label>Raison du rejet (obligatoire)</label><textarea id="reject-reason" rows="3" style="resize:vertical" placeholder="Décrivez le problème à corriger..."></textarea></div>`;
+  openModal('m-approve');
+}
+async function rejectStep(){
+  const reason=document.getElementById('reject-reason')?.value?.trim();
+  if(!reason){toast('Raison obligatoire');return;}
+  await sb.from('step_executions').update({status:'rejected',rejection_reason:reason}).eq('id',_modal.rejectStepId);
+  closeModal('m-approve');toast('Rejetée — employé notifié');renderApproval();updatePendingCount();
+}
+async function approveStep(){
+  if(_modal.rejectStepId)await quickApprove(_modal.rejectStepId);
+  closeModal('m-approve');
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: QC
+// ═══════════════════════════════════════════════════════
+async function renderQC(){
+  loading();
+  const {data:cases}=await sb.from('cases').select('*, qc_records(*)').order('created_at',{ascending:false});
+  const all=cases||[];
+  const withQC=all.filter(c=>c.qc_records?.length>0);
+  const libere=withQC.filter(c=>c.qc_records[0]?.decision==='Libéré').length;
+  const taux=withQC.length?Math.round(libere/withQC.length*100):null;
+  document.getElementById('content').innerHTML=`
+    <div class="kpi-grid kg4" style="margin-bottom:16px">
+      ${kpi('Cas total',all.length,withQC.length+' contrôlés')}
+      ${kpi('Taux libération',taux!==null?taux+'%':'—','cible ≥ 95%',taux===null?'c-gray':taux>=95?'c-green':taux>=80?'c-amber':'c-red')}
+      ${kpi('Libérés',libere,'','c-green')}
+      ${kpi('Non libérés ou en attente',all.length-libere,'','c-amber')}
+    </div>
+    <div class="card" style="padding:0">
+      <div style="padding:14px 16px;background:var(--s2);border-bottom:1px solid var(--bdr)"><div class="card-title">QC par cas — 25 critères MDR</div></div>
+      <div class="tw"><table>
+        <thead><tr><th>Case ID</th><th>Patient</th><th>Aligneurs</th><th>Critères OK</th><th>Mesures</th><th>Opérateur QC</th><th>Date</th><th>Décision</th><th>Action</th></tr></thead>
+        <tbody>${all.map(c=>{const qc=c.qc_records?.[0]||null;const done=qc?Object.values(qc.checks||{}).filter(Boolean).length:0;const pct=Math.round(done/25*100);return`<tr>
+          <td><strong class="mono" style="font-size:11px">${c.case_ref}</strong></td>
+          <td>${c.patient_ref||'—'}</td><td>${c.aligners_count}</td>
+          <td><div style="display:flex;align-items:center;gap:7px"><div class="prog" style="width:70px"><div class="prog-f" style="width:${pct}%;background:${pct===100?'var(--green)':pct>70?'var(--amber)':'var(--red)'}"></div></div><span style="font-size:10px;color:var(--t3)">${done}/25</span></div></td>
+          <td style="font-size:11px">${qc?.measurements?Object.values(qc.measurements).filter(Boolean).length+'/4':'—'}</td>
+          <td style="font-size:11px">${qc?.operator_id||'—'}</td>
+          <td style="font-size:11px;font-family:'DM Mono',monospace">${qc?.release_date||'—'}</td>
+          <td>${qc?.decision?badge(qc.decision,qc.decision==='Libéré'?'green':qc.decision==='Retour'?'amber':'red'):badge('—','gray')}</td>
+          <td><button class="btn btn-sm" onclick="openQCModal('${c.id}')">QC ↗</button></td>
+        </tr>`;}).join('')}</tbody>
+      </table></div>
+    </div>`;
+}
+async function openQCModal(caseId){
+  const {data:c}=await sb.from('cases').select('*').eq('id',caseId).single();
+  const {data:qcRec}=await sb.from('qc_records').select('*').eq('case_id',caseId).single();
+  const qc=qcRec||{checks:{},measurements:{},decision:'',release_date:'',notes:''};
+  _modal.qcCaseId=caseId;_modal.qc={...qc,checks:{...qc.checks},measurements:{...qc.measurements}};
+  const totalDone=QC_CHECKS.filter((q,i)=>qc.checks[i]).length;
+  document.getElementById('m-approve-title').textContent=`QC — ${c.case_ref} · ${c.patient_ref||'Patient'}`;
+  document.getElementById('m-approve-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Protocole QC — ${totalDone}/25</div>
+        <div style="max-height:360px;overflow-y:auto;border:1px solid var(--bdr);border-radius:8px;padding:4px 10px">
+          ${QC_GROUPS.map(g=>`<div class="qc-grp-title">${g.group}</div>${g.checks.map((ch,gi)=>{const idx=QC_CHECKS.indexOf(ch);return`<div class="qc-check"><input type="checkbox" id="qcm-${idx}" ${qc.checks[idx]?'checked':''} onchange="_modal.qc.checks[${idx}]=this.checked"><label for="qcm-${idx}">${ch}</label></div>`;}).join('')}`).join('')}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Mesures</div>
+        <div class="fr fr2" style="margin-bottom:10px">
+          ${[['ep_ant','Ép. ant. (mm)'],['ep_post','Ép. post. (mm)'],['ep_mol','Ép. molaire (mm)'],['ep_tol','Tolérance']].map(([k,l])=>`<div class="field"><label>${l}</label><input value="${qc.measurements?.[k]||''}" placeholder="0.75" style="font-family:'DM Mono',monospace" onchange="_modal.qc.measurements['${k}']=this.value"></div>`).join('')}
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--t3);margin-bottom:8px;text-transform:uppercase">Décision MDR</div>
+        <div class="fr fr2" style="margin-bottom:8px">
+          <div class="field"><label>Opérateur QC</label><input value="${qc.operator_id||''}" placeholder="Initiales" onchange="_modal.qc.operator_id=this.value"></div>
+          <div class="field"><label>Date</label><input type="date" value="${qc.release_date||''}" onchange="_modal.qc.release_date=this.value"></div>
+        </div>
+        <div class="field" style="margin-bottom:8px"><label>Décision</label>
+          <select onchange="_modal.qc.decision=this.value">
+            <option value="" ${!qc.decision?'selected':''}>— Non décidé —</option>
+            ${['Libéré','Retour','Rejet'].map(d=>`<option${qc.decision===d?' selected':''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Observations</label><textarea rows="3" style="resize:vertical" onchange="_modal.qc.notes=this.value">${qc.notes||''}</textarea></div>
+      </div>
+    </div>`;
+  document.querySelector('#m-approve .mfooter').innerHTML=`<button class="btn" onclick="closeModal('m-approve')">Annuler</button><button class="btn btn-primary" onclick="saveQC()">Enregistrer QC</button>`;
+  openModal('m-approve');
+}
+async function saveQC(){
+  const existing=await sb.from('qc_records').select('id').eq('case_id',_modal.qcCaseId).single();
+  if(existing.data){
+    await sb.from('qc_records').update({..._modal.qc,updated_at:new Date().toISOString()}).eq('id',existing.data.id);
+  } else {
+    await sb.from('qc_records').insert({..._modal.qc,case_id:_modal.qcCaseId});
+  }
+  if(_modal.qc.decision==='Libéré')await sb.from('cases').update({status:'completed'}).eq('id',_modal.qcCaseId);
+  closeModal('m-approve');toast('QC enregistré ✓');renderQC();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: STOCK
+// ═══════════════════════════════════════════════════════
+async function renderStock(){
+  loading();
+  const {data}=await sb.from('stock_items').select('*').order('category').order('name');
+  const stock=data||[];
+  const cats=['Tous',...[...new Set(stock.map(s=>s.category).filter(Boolean))].sort()];
+  const fil=ST.stockCat;
+  const vis=fil==='Tous'?stock:stock.filter(s=>s.category===fil);
+  const alerts=stock.filter(s=>s.quantity<=s.min_quantity);
+  document.getElementById('content').innerHTML=`
+    <div class="sec-hdr"><h2>Stocks <span style="font-size:12px;color:var(--t3);font-weight:400">(${stock.length} articles)</span></h2><button class="btn btn-primary" onclick="openStockModal()">+ Ajouter</button></div>
+    ${alerts.length?`<div style="margin-bottom:12px">${alerts.map(s=>`<div class="alert-box alert-danger">🔴 <strong>${s.name}</strong> — ${s.quantity} ${s.unit} (min: ${s.min_quantity}) — Réapprovisionnement requis</div>`).join('')}</div>`:''}
+    <div class="kpi-grid kg4" style="margin-bottom:12px">
+      ${kpi('Articles',stock.length,'')}
+      ${kpi('Alertes critiques',alerts.length,'','',alerts.length>0?'c-red':'')}
+      ${kpi('Stocks bas',stock.filter(s=>s.quantity>s.min_quantity&&s.quantity<=s.min_quantity*2).length,'à surveiller','c-amber')}
+      ${kpi('Stocks OK',stock.filter(s=>s.quantity>s.min_quantity*2).length,'','c-green')}
+    </div>
+    <div class="filter-bar"><span style="font-size:10px;color:var(--t3)">Catégorie :</span>${cats.map(c=>`<span class="pill${fil===c?' active':''}" onclick="ST.stockCat='${c}';renderStock()">${c}</span>`).join('')}</div>
+    <div class="stock-grid">
+      ${vis.map(s=>{const pct=Math.min(100,s.max_quantity?Math.round(s.quantity/s.max_quantity*100):50);const col=s.quantity<=s.min_quantity?'var(--red)':s.quantity<=s.min_quantity*2?'var(--amber)':'var(--green)';return`
+      <div class="stock-card" style="${s.quantity<=s.min_quantity?'border:1px solid var(--red)':''}">
+        <div style="display:flex;justify-content:space-between;gap:6px;margin-bottom:4px">
+          <div><div style="font-size:9px;color:var(--t3);font-weight:600">${s.category||''}</div><div style="font-size:11px;font-weight:600;line-height:1.3">${s.name}</div></div>
+          <button class="btn btn-sm" onclick="openStockModal('${s.id}')" style="flex-shrink:0;padding:3px 7px">✏</button>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:3px;margin-bottom:2px"><span style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:${col}">${s.quantity}</span><span style="font-size:11px;color:var(--t3)">${s.unit}</span></div>
+        <div class="stock-bar"><div class="stock-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-top:3px"><span>Min: ${s.min_quantity}</span><span>${pct}%</span><span>Max: ${s.max_quantity}</span></div>
+        ${s.lot_number?`<div style="font-size:9px;color:var(--t2);margin-top:3px;font-family:'DM Mono',monospace">Lot: ${s.lot_number}</div>`:''}
+        ${s.supplier?`<div style="font-size:9px;color:var(--t3)">${s.supplier}</div>`:''}
+      </div>`;}).join('')}
+    </div>`;
+}
+function openStockModal(id){
+  const s=id?null:null;_modal.stockId=id||null;_modal.stock={id:id,category:'Matières premières',name:'',unit:'',quantity:0,min_quantity:0,max_quantity:100,lot_number:'',supplier:'',notes:''};
+  if(id){
+    sb.from('stock_items').select('*').eq('id',id).single().then(({data})=>{
+      if(data){_modal.stock={...data};buildStockForm();}
+    });
+  } else buildStockForm();
+}
+function buildStockForm(){
+  const s=_modal.stock;
+  document.getElementById('m-stock-title').textContent=_modal.stockId?'Modifier stock':'Nouvel article';
+  const cats=['Matières premières','Consommables machine','Produits chimiques','Packaging','EPI & hygiène','Documentation MDR'];
+  document.getElementById('m-stock-body').innerHTML=`
+    <div class="field"><label>Catégorie</label><select onchange="_modal.stock.category=this.value">${cats.map(c=>`<option${c===s.category?' selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Nom</label><input value="${s.name||''}" placeholder="Nom du consommable" onchange="_modal.stock.name=this.value"></div>
+    <div class="fr fr2">
+      <div class="field"><label>Unité</label><input value="${s.unit||''}" placeholder="kg, rouleaux..." onchange="_modal.stock.unit=this.value"></div>
+      <div class="field"><label>Quantité actuelle</label><input type="number" min="0" step="0.5" value="${s.quantity||0}" onchange="_modal.stock.quantity=+this.value"></div>
+    </div>
+    <div class="fr fr3">
+      <div class="field"><label>Min</label><input type="number" min="0" value="${s.min_quantity||0}" onchange="_modal.stock.min_quantity=+this.value"></div>
+      <div class="field"><label>Max</label><input type="number" min="1" value="${s.max_quantity||100}" onchange="_modal.stock.max_quantity=+this.value"></div>
+      <div class="field"><label>N° lot</label><input value="${s.lot_number||''}" placeholder="LOT-001" onchange="_modal.stock.lot_number=this.value"></div>
+    </div>
+    <div class="field"><label>Fournisseur</label><input value="${s.supplier||''}" placeholder="Nom..." onchange="_modal.stock.supplier=this.value"></div>`;
+  openModal('m-stock');
+}
+async function saveStock(){
+  const s=_modal.stock;
+  if(!s.name){toast('Nom requis');return;}
+  if(_modal.stockId){
+    await sb.from('stock_items').update({...s,updated_at:new Date().toISOString()}).eq('id',_modal.stockId);
+  } else {
+    const {id,...rest}=s;await sb.from('stock_items').insert(rest);
+  }
+  closeModal('m-stock');toast('Stock mis à jour ✓');renderStock();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: ATTENDANCE
+// ═══════════════════════════════════════════════════════
+async function renderAttendance(){
+  loading();
+  const isAdmin=P.role!=='technician';
+  let query=sb.from('attendance').select('*, profiles(full_name,initials,role)').order('clock_in',{ascending:false}).limit(100);
+  if(!isAdmin)query=query.eq('employee_id',P.id);
+  const {data}=await query;
+  const records=data||[];
+  // Today
+  const today=new Date().toISOString().slice(0,10);
+  const todayRecs=records.filter(r=>r.work_date===today);
+  const active=records.filter(r=>!r.clock_out&&r.work_date===today);
+  document.getElementById('content').innerHTML=`
+    ${P.role==='technician'?`
+    <div class="kpi-grid kg3" style="margin-bottom:16px">
+      ${kpi("Aujourd'hui",todayRecs.length>0?todayRecs.reduce((a,r)=>a+(r.total_minutes||0),0)+' min':'Pas pointé','')}
+      ${kpi('Cette semaine',records.filter(r=>new Date(r.work_date)>new Date(Date.now()-7*86400000)).reduce((a,r)=>a+(r.total_minutes||0),0)+' min','')}
+      ${kpi('Ce mois',records.filter(r=>r.work_date?.slice(0,7)===today.slice(0,7)).reduce((a,r)=>a+(r.total_minutes||0),0)+' min','')}
+    </div>
+    <div style="margin-bottom:16px">
+      <button class="${active.length?'btn btn-red':'btn btn-green'} btn-lg btn-full" onclick="toggleClock()">${active.length?'⏹ Pointer la sortie':'⏱ Pointer l\'entrée'}</button>
+    </div>`:`
+    <div class="kpi-grid kg4" style="margin-bottom:16px">
+      ${kpi('Présents aujourd\'hui',active.length,'')}
+      ${kpi('Total min aujourd\'hui',todayRecs.reduce((a,r)=>a+(r.total_minutes||0),0)+' min','')}
+      ${kpi('Enregistrements totaux',records.length,'')}
+      ${kpi('Employés actifs',[...new Set(todayRecs.map(r=>r.employee_id))].length,'')}
+    </div>`}
+    <div class="card" style="padding:0">
+      <div style="padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--bdr)"><div class="card-title">Historique de présence</div></div>
+      ${!records.length?`<div class="empty"><div class="empty-icon">🕐</div><h3>Aucun pointage</h3></div>`:`
+      <div class="tw"><table>
+        <thead><tr>${isAdmin?'<th>Employé</th>':''}<th>Date</th><th>Entrée</th><th>Sortie</th><th class="tr">Durée</th><th>Statut</th></tr></thead>
+        <tbody>${records.slice(0,50).map(r=>`<tr>
+          ${isAdmin?`<td><div style="display:flex;align-items:center;gap:7px"><div style="width:24px;height:24px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--acc)">${r.profiles?.initials||'?'}</div>${r.profiles?.full_name||'—'}</div></td>`:''}
+          <td class="mono" style="font-size:11px">${r.work_date||'—'}</td>
+          <td class="mono" style="font-size:11px">${r.clock_in?new Date(r.clock_in).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
+          <td class="mono" style="font-size:11px">${r.clock_out?new Date(r.clock_out).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
+          <td class="tr mono">${r.total_minutes?r.total_minutes+'min':'—'}</td>
+          <td>${r.clock_out?badge('Sorti','gray'):badge('Présent','green')}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: NON-CONFORMITIES
+// ═══════════════════════════════════════════════════════
+async function renderNC(){
+  loading();
+  const {data}=await sb.from('non_conformities').select('*').order('created_at',{ascending:false});
+  const ncs=data||[];
+  const fil=ST.ncFilter;
+  const vis=fil==='Tous'?ncs:ncs.filter(n=>n.status===fil);
+  const open=ncs.filter(n=>n.status==='Ouverte').length;
+  document.getElementById('content').innerHTML=`
+    <div class="sec-hdr"><h2>Non-conformités</h2><button class="btn btn-primary" onclick="openNCModal()">+ Nouvelle NC</button></div>
+    <div class="kpi-grid kg4" style="margin-bottom:12px">
+      ${kpi('Total',ncs.length,'')}
+      ${kpi('Ouvertes',open,'','',open>0?'c-red':'')}
+      ${kpi('Critiques',ncs.filter(n=>n.severity==='Critique').length,'','c-red')}
+      ${kpi('Clôturées',ncs.filter(n=>n.status==='Clôturée').length,'','c-green')}
+    </div>
+    <div class="filter-bar"><span style="font-size:10px;color:var(--t3)">Statut :</span>${['Tous','Ouverte','En cours','Clôturée'].map(s=>`<span class="pill${fil===s?' active':''}" onclick="ST.ncFilter='${s}';renderNC()">${s}</span>`).join('')}</div>
+    <div class="card" style="padding:0">
+      ${!vis.length?`<div class="empty"><div class="empty-icon">✅</div><h3>Aucune NC${fil!=='Tous'?' avec ce statut':''}</h3></div>`:`
+      <div class="tw"><table>
+        <thead><tr><th>Réf NC</th><th>Case ID</th><th>Type</th><th>Sévérité</th><th>Étape</th><th>Description</th><th>Action</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>${vis.map(n=>`<tr>
+          <td class="mono" style="font-size:11px;font-weight:700">${n.nc_ref||n.id.slice(0,8)}</td>
+          <td class="mono" style="font-size:11px">${n.case_ref||'—'}</td>
+          <td style="font-size:11px">${n.nc_type||'—'}</td>
+          <td><span class="nc-${n.severity?.toLowerCase()||'minor'}">${n.severity||'—'}</span></td>
+          <td style="font-size:11px">S${n.step_number||'?'}</td>
+          <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.description||'—'}</td>
+          <td>${n.corrective_action?badge(n.corrective_action,'amber'):badge('À définir','gray')}</td>
+          <td>${badge(n.status,{Ouverte:'red','En cours':'blue',Clôturée:'green'}[n.status]||'gray')}</td>
+          <td><div style="display:flex;gap:4px">
+            <button class="btn btn-sm" onclick="openNCModal('${n.id}')">Éditer</button>
+            ${n.status!=='Clôturée'?`<button class="btn btn-sm btn-green" onclick="closeNC('${n.id}')">✓ Clôturer</button>`:''}
+          </div></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>`;
+}
+async function closeNC(id){await sb.from('non_conformities').update({status:'Clôturée'}).eq('id',id);toast('NC clôturée ✓');renderNC();}
+function openNCModal(id){
+  _modal.ncId=id||null;
+  _modal.nc=id?null:{nc_ref:'NC-'+String(Date.now()).slice(-4),case_ref:'',nc_type:'',severity:'Mineure',step_number:10,description:'',corrective_action:'',status:'Ouverte'};
+  if(id){sb.from('non_conformities').select('*').eq('id',id).single().then(({data})=>{_modal.nc=data;buildNCForm();});}
+  else buildNCForm();
+}
+function buildNCForm(){
+  const n=_modal.nc||{};
+  document.getElementById('m-nc-title').textContent=_modal.ncId?'Éditer NC':'Nouvelle non-conformité';
+  document.getElementById('m-nc-body').innerHTML=`
+    <div class="fr fr3"><div class="field"><label>Réf NC</label><input value="${n.nc_ref||''}" onchange="_modal.nc.nc_ref=this.value"></div>
+    <div class="field"><label>Case ID lié</label><input value="${n.case_ref||''}" placeholder="BA-0001" onchange="_modal.nc.case_ref=this.value"></div>
+    <div class="field"><label>Date</label><input type="date" value="${n.created_at?.slice(0,10)||new Date().toISOString().slice(0,10)}"></div></div>
+    <div class="fr fr3"><div class="field"><label>Type</label><select onchange="_modal.nc.nc_type=this.value"><option value="">—</option>${NC_TYPES.map(t=>`<option${t===n.nc_type?' selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="field"><label>Sévérité</label><select onchange="_modal.nc.severity=this.value">${['Mineure','Majeure','Critique'].map(s=>`<option${s===n.severity?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="field"><label>Étape</label><select onchange="_modal.nc.step_number=+this.value">${STEPS_DEF.map(s=>`<option value="${s.n}"${s.n===+n.step_number?' selected':''}>S${s.n} ${s.name}</option>`).join('')}</select></div></div>
+    <div class="fr fr2"><div class="field"><label>Action corrective</label><select onchange="_modal.nc.corrective_action=this.value"><option value="">À définir</option>${['Rejet & reprise','Dérogation documentée','Retouche','Mise en quarantaine'].map(a=>`<option${a===n.corrective_action?' selected':''}>${a}</option>`).join('')}</select></div>
+    <div class="field"><label>Statut</label><select onchange="_modal.nc.status=this.value">${['Ouverte','En cours','Clôturée'].map(s=>`<option${s===n.status?' selected':''}>${s}</option>`).join('')}</select></div></div>
+    <div class="field"><label>Description</label><textarea rows="2" style="resize:vertical" onchange="_modal.nc.description=this.value">${n.description||''}</textarea></div>`;
+  openModal('m-nc');
+}
+async function saveNC(){
+  const n=_modal.nc;if(!n)return;
+  if(_modal.ncId){await sb.from('non_conformities').update(n).eq('id',_modal.ncId);}
+  else{const {id,...rest}=n;await sb.from('non_conformities').insert({...rest,created_by:P.id});}
+  closeModal('m-nc');toast('NC enregistrée ✓');renderNC();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER: USERS (SUPER ADMIN)
+// ═══════════════════════════════════════════════════════
+async function renderUsers(){
+  if(P.role!=='super_admin'){document.getElementById('content').innerHTML='<div class="empty"><h3>Accès refusé</h3></div>';return;}
+  loading();
+  const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  const users=data||[];
+  document.getElementById('content').innerHTML=`
+    <div class="sec-hdr"><h2>Utilisateurs <span style="font-size:12px;color:var(--t3);font-weight:400">(${users.length})</span></h2><button class="btn btn-primary" onclick="openUserModal()">+ Créer utilisateur</button></div>
+    <div class="alert-box alert-info" style="margin-bottom:12px">Les nouveaux utilisateurs reçoivent un email Supabase pour définir leur mot de passe. Assurez-vous que l'authentification email est activée dans Supabase → Auth → Settings.</div>
+    <div class="card" style="padding:0"><div class="tw"><table>
+      <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Étapes assignées</th><th>Actif</th><th>Actions</th></tr></thead>
+      <tbody>${users.map(u=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--acc)">${u.initials||'?'}</div><strong style="font-size:12px">${u.full_name}</strong></div></td>
+        <td style="font-size:11px;color:var(--t2)">—</td>
+        <td>${badge(ROLES_LABEL[u.role]||u.role,{super_admin:'red',admin:'blue',technician:'green'}[u.role]||'gray')}</td>
+        <td style="font-size:11px;color:var(--t2)">${u.assigned_steps?.length?'S'+u.assigned_steps.join(', S'):'Toutes'}</td>
+        <td>${u.active?badge('Actif','green'):badge('Inactif','gray')}</td>
+        <td><div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="openUserModal('${u.id}')">Éditer</button>
+          <button class="btn btn-sm" style="color:var(--${u.active?'red':'green'})" onclick="toggleUserActive('${u.id}',${!u.active})">${u.active?'Désactiver':'Activer'}</button>
+        </div></td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+}
+function openUserModal(id){
+  _modal.userId=id||null;
+  _modal.user=id?null:{full_name:'',initials:'',role:'technician',assigned_steps:[],email:'',password:''};
+  if(id){sb.from('profiles').select('*').eq('id',id).single().then(({data})=>{_modal.user={...data,email:'',password:''};buildUserForm();});}
+  else buildUserForm();
+}
+function buildUserForm(){
+  const u=_modal.user||{};const isNew=!_modal.userId;
+  document.getElementById('m-user-title').textContent=isNew?'Nouvel utilisateur':'Modifier utilisateur';
+  document.getElementById('m-user-body').innerHTML=`
+    ${isNew?`<div class="fr fr2"><div class="field"><label>Email</label><input type="email" value="${u.email||''}" placeholder="prenom@bloomaligner.fr" onchange="_modal.user.email=this.value"></div>
+    <div class="field"><label>Mot de passe temporaire</label><input type="password" value="" placeholder="Min. 6 caractères" onchange="_modal.user.password=this.value"></div></div>`:''}
+    <div class="fr fr3"><div class="field"><label>Nom complet</label><input value="${u.full_name||''}" onchange="_modal.user.full_name=this.value"></div>
+    <div class="field"><label>Initiales</label><input value="${u.initials||''}" maxlength="3" placeholder="JD" onchange="_modal.user.initials=this.value.toUpperCase()"></div>
+    <div class="field"><label>Rôle</label><select onchange="_modal.user.role=this.value">${[['technician','Technicien'],['admin','Admin / QC'],['super_admin','Super Admin']].map(([v,l])=>`<option value="${v}"${u.role===v?' selected':''}>${l}</option>`).join('')}</select></div></div>
+    <div class="field"><label>Étapes assignées (laisser vide = toutes)</label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;border:1px solid var(--bdr2);border-radius:var(--rsm);background:var(--sur)">
+        ${STEPS_DEF.map(sd=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;padding:3px 7px;border:1px solid var(--bdr);border-radius:20px;background:${(u.assigned_steps||[]).includes(sd.n)?'var(--al)':'var(--sur)'}"><input type="checkbox" ${(u.assigned_steps||[]).includes(sd.n)?'checked':''} onchange="toggleStepAssign(${sd.n},this.checked)" style="display:none">S${sd.n} ${sd.name}</label>`).join('')}
+      </div>
+    </div>`;
+  openModal('m-user');
+}
+function toggleStepAssign(n,checked){
+  if(!_modal.user.assigned_steps)_modal.user.assigned_steps=[];
+  if(checked){if(!_modal.user.assigned_steps.includes(n))_modal.user.assigned_steps.push(n);}
+  else{_modal.user.assigned_steps=_modal.user.assigned_steps.filter(s=>s!==n);}
+}
+async function saveUser(){
+  const u=_modal.user;if(!u)return;
+  if(_modal.userId){
+    await sb.from('profiles').update({full_name:u.full_name,initials:u.initials,role:u.role,assigned_steps:u.assigned_steps}).eq('id',_modal.userId);
+    toast('Utilisateur mis à jour ✓');
+  } else {
+    if(!u.email||!u.password){toast('Email et mot de passe requis');return;}
+    const {data,error}=await sb.auth.admin.createUser({email:u.email,password:u.password,user_metadata:{full_name:u.full_name,initials:u.initials,role:u.role},email_confirm:true});
+    if(error){toast('Erreur: '+error.message);return;}
+    if(data?.user)await sb.from('profiles').upsert({id:data.user.id,full_name:u.full_name,initials:u.initials,role:u.role,assigned_steps:u.assigned_steps});
+    toast('Utilisateur créé ✓');
+  }
+  closeModal('m-user');renderUsers();
+}
+async function toggleUserActive(id,active){
+  await sb.from('profiles').update({active}).eq('id',id);toast(active?'Activé ✓':'Désactivé');renderUsers();
+}
+
+// ═══════════════════════════════════════════════════════
+// CASE MODAL
+// ═══════════════════════════════════════════════════════
+async function openCaseModal(id){
+  _modal.caseId=id||null;
+  _modal.case=id?null:{case_ref:'BA-'+String(Date.now()).slice(-4),patient_ref:'',dentist_name:'',aligners_count:20,complexity:'Modéré',status:'queued',notes:''};
+  if(id){const {data}=await sb.from('cases').select('*').eq('id',id).single();_modal.case={...data};}
+  document.getElementById('m-case-title').textContent=_modal.caseId?'Éditer cas':'Nouveau cas';
+  const c=_modal.case;
+  document.getElementById('m-case-body').innerHTML=`
+    <div class="fr fr4"><div class="field"><label>Case ID</label><input value="${c.case_ref||''}" onchange="_modal.case.case_ref=this.value"></div>
+    <div class="field"><label>Statut</label><select onchange="_modal.case.status=this.value">${Object.entries(STATUS_LABEL).map(([v,l])=>`<option value="${v}"${c.status===v?' selected':''}>${l}</option>`).join('')}</select></div>
+    <div class="field"><label>Patient (réf)</label><input value="${c.patient_ref||''}" placeholder="Réf. dossier" onchange="_modal.case.patient_ref=this.value"></div>
+    <div class="field"><label>Praticien</label><input value="${c.dentist_name||''}" placeholder="Dr. Nom" onchange="_modal.case.dentist_name=this.value"></div></div>
+    <div class="fr fr3"><div class="field"><label>Aligneurs</label><input type="number" min="4" max="60" value="${c.aligners_count||20}" onchange="_modal.case.aligners_count=+this.value"></div>
+    <div class="field"><label>Complexité</label><select onchange="_modal.case.complexity=this.value">${['Simple','Modéré','Complexe'].map(s=>`<option${s===c.complexity?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="field"><label>Note</label><input value="${c.notes||''}" placeholder="Remarques..." onchange="_modal.case.notes=this.value"></div></div>`;
+  openModal('m-case');
+}
+async function saveCase(){
+  const c=_modal.case;if(!c?.case_ref){toast('Case ID requis');return;}
+  if(_modal.caseId){
+    await sb.from('cases').update(c).eq('id',_modal.caseId);
+    toast('Cas mis à jour ✓');
+  } else {
+    const {data,error}=await sb.from('cases').insert({...c,created_by:P.id}).select().single();
+    if(error){toast('Erreur: '+error.message);return;}
+    // Create all 13 step executions
+    const stepInserts=STEPS_DEF.map((sd,i)=>({case_id:data.id,step_number:sd.n,step_name:sd.name,step_type:sd.type,std_fru:sd.std,status:i===0?'available':'locked'}));
+    await sb.from('step_executions').insert(stepInserts);
+    await sb.from('cases').update({status:'in_production'}).eq('id',data.id);
+    toast('Cas créé avec 13 étapes ✓');
+  }
+  closeModal('m-case');
+  if(ST.page==='cases')renderCases();else if(ST.page==='dashboard')renderDashboard();
+}
+async function deleteCase(id){
+  if(!confirm('Supprimer ce cas et toutes ses données ?'))return;
+  await sb.from('cases').delete().eq('id',id);
+  toast('Cas supprimé');renderCases();
+}
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(m=>m.classList.remove('open'));});
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+initApp();
+</script>
+</body>
+</html>
